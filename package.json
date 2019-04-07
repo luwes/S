@@ -11,11 +11,13 @@
     "karma": "^2.0.5",
     "karma-chrome-launcher": "^2.2.0",
     "karma-jasmine": "^1.1.2",
-    "rollup": "^0.63.4",
+    "rollup": "^1.9.0",
+    "rollup-plugin-size": "0.0.1",
+    "rollup-plugin-terser": "^4.0.4",
     "typescript": "^2.9.2"
   },
   "scripts": {
-    "build": "tsc && rollup dist/es/S.js -f \"umd\" -n \"S\" -o dist/S.js && rollup dist/es/withsubclocks.js -f \"umd\" -n \"S\" -o dist/withsubclocks.js",
+    "build": "tsc && rollup -c --silent",
     "test": "jasmine",
     "bench": "node --allow-natives-syntax bench/bench.js"
   },
