@@ -45,6 +45,7 @@
     "eslint-plugin-fp": "^2.3.0",
     "eslint-plugin-import": "^2.16.0",
     "fs-extra": "^7.0.1",
+    "jasmine": "^3.4.0",
     "jsdoc-to-markdown": "^4.0.1",
     "karma": "^4.0.1",
     "karma-chai": "^0.1.0",
