@@ -11,7 +11,16 @@ const plugins = [
     warnings: true,
     mangle: {
       properties: {
-        regex: /^_/
+        reserved: [
+          'on',
+          'sample',
+          'makeComputationNode',
+          'makeDataNode',
+          'isListening',
+          'node',
+          'value',
+          'current'
+        ]
       }
     },
     nameCache: {
@@ -26,7 +35,10 @@ const plugins = [
 ];
 
 export default [{
-  input: 'src/S.js',
+  input: 'src/index.js',
+  watch: {
+    clearScreen: false
+  },
   output: {
     name: 'S',
     file: 'dist/S.mjs',
@@ -34,7 +46,10 @@ export default [{
   },
   plugins: plugins.filter((p) => p === sz)
 }, {
-  input: 'src/S.js',
+  input: 'src/index.js',
+  watch: {
+    clearScreen: false
+  },
   output: {
     name: 'S',
     file: 'dist/S.js',

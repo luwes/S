@@ -16,9 +16,6 @@ function S(fn, value) {
   }
 }
 
-// compatibility with commonjs systems that expect default export to be at require('s.js').default rather than just require('s-js')
-Object.defineProperty(S, 'default', { value : S });
-
 function root(fn) {
   var owner = Owner,
     disposer =
@@ -68,10 +65,6 @@ function callAll(ss) {
   };
 }
 
-function effect(fn, value) {
-  makeComputationNode(fn, value, false, false);
-}
-
 function data(value) {
   var node = new DataNode(value);
   return function data(value) {
@@ -92,7 +85,7 @@ function value(current, eq) {
     } else {
       var same = eq ? eq(current, update) : current === update;
       if (!same) {
-        var time = RootClock._time;
+        var time = RootClock.time;
         if (age === time)
           throw new Error(
             'conflicting values: ' + update + ' is not the same as ' + current
@@ -144,14 +137,6 @@ function makeDataNode(value) {
   return new DataNode(value);
 }
 
-function disposeNode(node) {
-  if (RunningClock !== null) {
-    RootClock.disposes.add(node);
-  } else {
-    dispose(node);
-  }
-}
-
 function isFrozen() {
   return RunningClock !== null;
 }
@@ -164,7 +149,7 @@ function isListening() {
 /// Graph classes and operations
 class Clock {
   constructor() {
-    this._time = 0;
+    this.time = 0;
     this.changes = new Queue(); // batched changes to data nodes
     this.updates = new Queue(); // computations to update
     this.disposes = new Queue(); // disposals to run after current batch of updates finishes
@@ -172,8 +157,8 @@ class Clock {
 }
 
 var RootClockProxy = {
-  _time: function() {
-    return RootClock._time;
+  time: function() {
+    return RootClock.time;
   }
 };
 
@@ -236,7 +221,7 @@ class ComputationNode {
   }
   current() {
     if (Listener !== null) {
-      if (this.age === RootClock._time) {
+      if (this.age === RootClock.time) {
         if (this.state === RUNNING) throw new Error('circular dependency');
         else updateNode(this); // checks for state === STALE internally, so don't need to check here
       }
@@ -329,7 +314,7 @@ function execToplevelComputation(fn, value) {
 
 function finishToplevelComputation(owner, listener) {
   if (RootClock.changes.count > 0 || RootClock.updates.count > 0) {
-    RootClock._time++;
+    RootClock.time++;
     try {
       run(RootClock);
     } finally {
@@ -376,7 +361,7 @@ function recycleOrClaimNode(node, fn, value, orphan) {
   } else {
     node.fn = fn;
     node.value = value;
-    node.age = RootClock._time;
+    node.age = RootClock.time;
     if (_owner !== null) {
       if (_owner.owned === null) _owner.owned = [node];
       else _owner.owned.push(node);
@@ -429,7 +414,7 @@ function event() {
   // b/c we might be under a top level S.root(), have to preserve current root
   var owner = Owner;
   RootClock.updates.reset();
-  RootClock._time++;
+  RootClock.time++;
   try {
     run(RootClock);
   } finally {
@@ -451,7 +436,7 @@ function run(clock) {
   ) {
     if (count > 0)
       // don't tick on first run, or else we expire already scheduled updates
-      clock._time++;
+      clock.time++;
     clock.changes.run(applyDataChange);
     clock.updates.run(updateNode);
     clock.disposes.run(dispose);
@@ -482,7 +467,7 @@ function markComputationsStale(log) {
 }
 
 function markNodeStale(node) {
-  var time = RootClock._time;
+  var time = RootClock.time;
   if (node.age < time) {
     node.age = time;
     node.state = STALE;
@@ -495,7 +480,7 @@ function markNodeStale(node) {
 function markOwnedNodesForDisposal(owned) {
   for (var i = 0; i < owned.length; i++) {
     var child = owned[i];
-    child.age = RootClock._time;
+    child.age = RootClock.time;
     child.state = CURRENT;
     if (child.owned !== null) markOwnedNodesForDisposal(child.owned);
   }
@@ -580,4 +565,4 @@ function dispose(node) {
 }
 
 export default S;
-export { cleanup, data, disposeNode, effect, freeze, isFrozen, isListening, makeComputationNode, makeDataNode, on, root, sample, value };
+export { cleanup, data, freeze, isFrozen, isListening, makeComputationNode, makeDataNode, on, root, sample, value };
